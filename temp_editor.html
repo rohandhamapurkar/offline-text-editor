@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<title>Offline Text Editor</title>
+<style>
+	body {
+		font: 2rem/1.5 monospace;
+		max-width: 60rem;
+		margin: 0 auto;
+		padding: 4rem;
+	}
+</style>
+
+<body>
+	<script>
+		!function (l) { with (document.body) contentEditable = !0, innerHTML = [l.c], oninput = function () { l.c = innerHTML } }({});
+	</script>
+</body>
