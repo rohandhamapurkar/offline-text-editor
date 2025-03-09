@@ -8,37 +8,218 @@
         padding: 0;
         background-color: #f0f0f0;
     }
+
     .editor-window {
         background: white;
         border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         overflow: hidden;
     }
+
     .title-bar {
         background: #e8e8e8;
         padding: 0.5rem 1rem;
         border-bottom: 1px solid #ddd;
         font-size: 1rem;
         color: #333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
+
     .editor-content {
         padding: 2rem;
         min-height: 500px;
     }
+
     .editor-content:focus {
         outline: none;
     }
+
+    .toolbar {
+        display: flex;
+        gap: 10px;
+        padding: 0.5rem 1rem;
+        background: #f5f5f5;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .toolbar select,
+    .toolbar button,
+    .toolbar input {
+        padding: 5px;
+        border-radius: 3px;
+        border: 1px solid #ccc;
+        background: white;
+        font-size: 0.8rem;
+    }
+
+    .toolbar button {
+        cursor: pointer;
+    }
+
+    .toolbar button:hover {
+        background: #e0e0e0;
+    }
+
+    .code-snippet {
+        background-color: #f0f0f0;
+        border-left: 3px solid #2196F3;
+        font-family: monospace;
+        padding: 10px;
+        margin: 10px 0;
+        white-space: pre-wrap;
+        overflow-x: auto;
+        display: block;
+        min-height: 1.5em;
+    }
 </style>
+
 <body>
     <div class="editor-window">
-        <div class="title-bar">Offline Text Editor</div>
+        <div class="title-bar">
+            <span>Offline Text Editor</span>
+        </div>
+        <div class="toolbar">
+            <select id="font-family">
+                <option value="monospace">Monospace</option>
+                <option value="serif">Serif</option>
+                <option value="sans-serif">Sans-serif</option>
+                <option value="Arial">Arial</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Helvetica">Helvetica</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Courier New">Courier New</option>
+            </select>
+            <select id="font-size">
+                <option value="0.8rem">Small</option>
+                <option value="1rem">Medium</option>
+                <option value="1.2rem">Large</option>
+                <option value="1.5rem">X-Large</option>
+                <option value="2rem" selected>XX-Large</option>
+            </select>
+            <input type="color" id="font-color" value="#000000">
+            <button id="code-snippet-btn">Add Code Snippet</button>
+        </div>
         <div class="editor-content" contenteditable="true"></div>
     </div>
     <script>
-        !function(l) {
+        !function (l) {
             const content = document.querySelector('.editor-content');
+            const fontFamily = document.getElementById('font-family');
+            const fontSize = document.getElementById('font-size');
+            const fontColor = document.getElementById('font-color');
+            const codeSnippetBtn = document.getElementById('code-snippet-btn');
+
+            // Load content if available
             content.innerHTML = l.c || '';
-            content.oninput = function() { l.c = content.innerHTML };
+
+            // Save content on input
+            content.oninput = function () { l.c = content.innerHTML };
+
+            // Font family change
+            fontFamily.onchange = function () {
+                content.style.fontFamily = this.value;
+            };
+
+            // Font size change
+            fontSize.onchange = function () {
+                content.style.fontSize = this.value;
+            };
+
+            // Font color change
+            fontColor.onchange = function () {
+                content.style.color = this.value;
+            };
+
+            // Add code snippet
+            codeSnippetBtn.onclick = function () {
+                // Make sure the content area has focus
+                content.focus();
+
+                try {
+                    const selection = window.getSelection();
+
+                    // Create a code snippet element
+                    const codeSnippet = document.createElement('pre');
+                    codeSnippet.className = 'code-snippet';
+
+                    if (selection.rangeCount > 0) {
+                        const range = selection.getRangeAt(0);
+                        const selectedText = range.toString();
+
+                        if (selectedText.trim()) {
+                            // If text is selected, wrap it in a code snippet
+                            codeSnippet.textContent = selectedText;
+
+                            range.deleteContents();
+                            range.insertNode(codeSnippet);
+                        } else {
+                            // If no text is selected, insert an empty code snippet
+                            codeSnippet.textContent = 'Enter your code here';
+
+                            // Insert at cursor position
+                            range.insertNode(codeSnippet);
+
+                            // Position cursor inside the code snippet
+                            range.selectNodeContents(codeSnippet);
+                            range.collapse(true); // collapse to start
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                        }
+                    } else {
+                        // Fallback if no range available
+                        codeSnippet.textContent = 'Enter your code here';
+                        content.appendChild(codeSnippet);
+                    }
+
+                    // Update stored content
+                    l.c = content.innerHTML;
+                } catch (error) {
+                    // Fallback insertion method
+                    const codeHTML = '<pre class="code-snippet">Enter your code here</pre>';
+                    document.execCommand('insertHTML', false, codeHTML);
+
+                    // Update stored content
+                    l.c = content.innerHTML;
+                }
+            };
+
+            // Initialize with saved settings if available
+            if (l.ff) fontFamily.value = l.ff;
+            if (l.fs) fontSize.value = l.fs;
+            if (l.fc) fontColor.value = l.fc;
+
+            // Apply saved settings
+            content.style.fontFamily = fontFamily.value;
+            content.style.fontSize = fontSize.value;
+            content.style.color = fontColor.value;
+
+            // Save settings on change
+            fontFamily.onchange = function () {
+                content.style.fontFamily = this.value;
+                l.ff = this.value;
+            };
+
+            fontSize.onchange = function () {
+                content.style.fontSize = this.value;
+                l.fs = this.value;
+            };
+
+            fontColor.onchange = function () {
+                content.style.color = this.value;
+                l.fc = this.value;
+            };
+
+            // Add confirmation before closing or refreshing
+            window.addEventListener('beforeunload', function (e) {
+                // Cancel the event
+                e.preventDefault();
+                // Chrome requires returnValue to be set
+                e.returnValue = 'Are you sure you want to leave? Your changes will be stored in this browser only.';
+                // Return value for older browsers
+                return 'Are you sure you want to leave? Your changes will be stored in this browser only.';
+            });
         }({});
     </script>
 </body>
