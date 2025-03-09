@@ -73,6 +73,36 @@
         display: block;
         min-height: 1.5em;
     }
+
+    /* Print styles */
+    @media print {
+        body {
+            background-color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        .editor-window {
+            box-shadow: none;
+            border-radius: 0;
+        }
+
+        .title-bar,
+        .toolbar {
+            display: none;
+        }
+
+        .editor-content {
+            padding: 0;
+            min-height: auto;
+        }
+
+        .code-snippet {
+            border-left: 2px solid #2196F3;
+            background-color: white;
+            page-break-inside: avoid;
+        }
+    }
 </style>
 
 <body>
@@ -100,6 +130,7 @@
             </select>
             <input type="color" id="font-color" value="#000000">
             <button id="code-snippet-btn">Add Code Snippet</button>
+            <button id="print-btn" onclick="window.print()">Print</button>
         </div>
         <div class="editor-content" contenteditable="true"></div>
     </div>

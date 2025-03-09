@@ -7,6 +7,7 @@ A lightweight, customizable text editor that works entirely in your browser with
 -   **Fully Offline** - Works without internet connection
 -   **Persistent Storage** - Automatically saves content and formatting preferences in your browser
 -   **Close/Refresh Warning** - Confirms before closing or refreshing to prevent accidental navigation
+-   **Print Support** - Clean printing without UI controls
 -   **Font Customization** - Change font family, size, and color to suit your preferences
 -   **Code Snippets** - Insert and format code with proper styling
 -   **Undo/Redo Support** - Use Ctrl+Z and Ctrl+Y for standard text editing operations
