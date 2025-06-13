@@ -1,78 +1,299 @@
 <!DOCTYPE html>
 <title>Offline Text Editor</title>
 <style>
+    :root {
+        --bg-primary: #f5f7fa;
+        --bg-secondary: #ffffff;
+        --bg-tertiary: #f8fafc;
+        --text-primary: #2d3748;
+        --text-secondary: #4a5568;
+        --border-color: #e2e8f0;
+        --accent-color: #4299e1;
+        --accent-hover: #3182ce;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="dark"] {
+        --bg-primary: #1a202c;
+        --bg-secondary: #2d3748;
+        --bg-tertiary: #4a5568;
+        --text-primary: #ffffff;
+        --text-secondary: #cbd5e0;
+        --border-color: #4a5568;
+        --accent-color: #63b3ed;
+        --accent-hover: #4299e1;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
     body {
-        font: 2rem/1.5 monospace;
-        max-width: 150rem;
-        margin: 2rem auto;
-        padding: 0;
-        background-color: #f0f0f0;
+        font: 1rem/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     .editor-window {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        box-shadow: var(--shadow-lg);
         overflow: hidden;
+        border: 1px solid var(--border-color);
     }
 
     .title-bar {
-        background: #e8e8e8;
-        padding: 0.5rem 1rem;
-        border-bottom: 1px solid #ddd;
-        font-size: 1rem;
-        color: #333;
+        background: var(--bg-tertiary);
+        padding: 0.75rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
 
+    .title-controls {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .char-count {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+
     .editor-content {
         padding: 2rem;
-        min-height: 500px;
+        min-height: 60vh;
+        font-size: inherit;
+        line-height: 1.7;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        caret-color: var(--text-primary);
     }
 
     .editor-content:focus {
         outline: none;
     }
 
+    [data-theme="dark"] .editor-content {
+        caret-color: #ffffff;
+        color: #ffffff !important;
+    }
+
+    [data-theme="dark"] .editor-content * {
+        color: #ffffff !important;
+    }
+
+    .editor-content p {
+        margin: 0 0 1rem 0;
+    }
+
+    .editor-content p:last-child {
+        margin-bottom: 0;
+    }
+
     .toolbar {
         display: flex;
-        gap: 10px;
-        padding: 0.5rem 1rem;
-        background: #f5f5f5;
-        border-bottom: 1px solid #ddd;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 1rem 1.5rem;
+        background: var(--bg-tertiary);
+        border-bottom: 1px solid var(--border-color);
+        align-items: center;
+    }
+
+    .toolbar-section {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        padding-right: 1rem;
+        border-right: 1px solid var(--border-color);
+    }
+
+    .toolbar-section:last-child {
+        border-right: none;
+        padding-right: 0;
     }
 
     .toolbar select,
     .toolbar button,
-    .toolbar input {
-        padding: 5px;
-        border-radius: 3px;
-        border: 1px solid #ccc;
-        background: white;
-        font-size: 0.8rem;
+    .toolbar input[type="color"] {
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
     }
 
     .toolbar button {
         cursor: pointer;
+        font-weight: 500;
+        min-width: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .toolbar button:hover {
-        background: #e0e0e0;
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+
+    .toolbar button.active {
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+
+    .toolbar select:focus,
+    .toolbar button:focus,
+    .toolbar input:focus {
+        outline: 2px solid var(--accent-color);
+        outline-offset: 2px;
+    }
+
+    .format-btn {
+        font-weight: bold;
+        width: 2.5rem;
+    }
+
+    .format-btn.bold { font-weight: bold; }
+    .format-btn.italic { font-style: italic; }
+    .format-btn.underline { text-decoration: underline; }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.3s;
+        border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+        background-color: var(--accent-color);
+    }
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(26px);
     }
 
     .code-snippet {
-        background-color: #f0f0f0;
-        border-left: 3px solid #2196F3;
-        font-family: monospace;
-        padding: 10px;
-        margin: 10px 0;
+        background-color: var(--bg-tertiary);
+        border-left: 4px solid var(--accent-color);
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        padding: 1rem;
+        margin: 1rem 0;
         white-space: pre-wrap;
         overflow-x: auto;
         display: block;
         min-height: 1.5em;
+        border-radius: 0 6px 6px 0;
+        font-size: 0.9em;
+        line-height: 1.5;
+        color: var(--text-primary);
     }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+        background-color: var(--bg-secondary);
+        margin: 20% auto;
+        padding: 2rem;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: var(--shadow-lg);
+        text-align: center;
+        border: 1px solid var(--border-color);
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+
+    .modal-button {
+        padding: 0.75rem 1.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .modal-button.primary {
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+
+    .modal-button.primary:hover {
+        background: var(--accent-hover);
+    }
+
+    .modal-button.secondary {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .modal-button.secondary:hover {
+        background: var(--bg-tertiary);
+    }
+
 
     /* Print styles */
     @media print {
@@ -85,6 +306,7 @@
         .editor-window {
             box-shadow: none;
             border-radius: 0;
+            border: none;
         }
 
         .title-bar,
@@ -95,12 +317,38 @@
         .editor-content {
             padding: 0;
             min-height: auto;
+            background: white;
+            color: black;
         }
 
         .code-snippet {
             border-left: 2px solid #2196F3;
-            background-color: white;
+            background-color: #f9f9f9;
             page-break-inside: avoid;
+            color: black;
+        }
+    }
+
+    @media (max-width: 768px) {
+        body {
+            padding: 0.5rem;
+        }
+
+        .toolbar {
+            padding: 0.75rem;
+        }
+
+        .toolbar-section {
+            padding-right: 0.5rem;
+        }
+
+        .editor-content {
+            padding: 1rem;
+        }
+
+        .modal-content {
+            margin: 30% auto;
+            width: 95%;
         }
     }
 </style>
@@ -109,69 +357,226 @@
     <div class="editor-window">
         <div class="title-bar">
             <span>Offline Text Editor</span>
+            <div class="title-controls">
+                <span id="char-count" class="char-count">0 characters</span>
+            </div>
         </div>
         <div class="toolbar">
-            <select id="font-family">
-                <option value="monospace">Monospace</option>
-                <option value="serif">Serif</option>
-                <option value="sans-serif">Sans-serif</option>
-                <option value="Arial">Arial</option>
-                <option value="Verdana">Verdana</option>
-                <option value="Helvetica">Helvetica</option>
-                <option value="Times New Roman">Times New Roman</option>
-                <option value="Courier New">Courier New</option>
-            </select>
-            <select id="font-size">
-                <option value="0.8rem">Small</option>
-                <option value="1rem">Medium</option>
-                <option value="1.2rem">Large</option>
-                <option value="1.5rem">X-Large</option>
-                <option value="2rem" selected>XX-Large</option>
-            </select>
-            <input type="color" id="font-color" value="#000000">
-            <button id="code-snippet-btn">Add Code Snippet</button>
-            <button id="print-btn" onclick="window.print()">Print</button>
+            <div class="toolbar-section">
+                <button class="format-btn bold" id="bold-btn" title="Bold (Ctrl+B)">B</button>
+                <button class="format-btn italic" id="italic-btn" title="Italic (Ctrl+I)">I</button>
+                <button class="format-btn underline" id="underline-btn" title="Underline (Ctrl+U)">U</button>
+            </div>
+            <div class="toolbar-section">
+                <select id="font-family">
+                    <option value="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">System</option>
+                    <option value="monospace">Monospace</option>
+                    <option value="serif">Serif</option>
+                    <option value="sans-serif">Sans-serif</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Helvetica">Helvetica</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                </select>
+                <select id="font-size">
+                    <option value="0.8rem">Small</option>
+                    <option value="1rem" selected>Medium</option>
+                    <option value="1.2rem">Large</option>
+                    <option value="1.5rem">X-Large</option>
+                    <option value="2rem">XX-Large</option>
+                </select>
+                <input type="color" id="font-color" value="#2d3748" title="Text Color">
+            </div>
+            <div class="toolbar-section">
+                <button id="code-snippet-btn" title="Add Code Snippet">{ }</button>
+            </div>
+            <div class="toolbar-section">
+                <button id="export-btn" title="Export as TXT">💾</button>
+                <button id="print-btn" onclick="window.print()" title="Print">🖨️</button>
+            </div>
+            <div class="toolbar-section">
+                <label class="toggle-switch" title="Dark Mode">
+                    <input type="checkbox" id="dark-mode-toggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
         </div>
-        <div class="editor-content" contenteditable="true"></div>
+        <div class="editor-content" contenteditable="true" spellcheck="false"></div>
+    </div>
+    
+    <!-- Custom Close Warning Modal -->
+    <div id="closeWarningModal" class="modal">
+        <div class="modal-content">
+            <h3>Are you sure you want to leave?</h3>
+            <p>Your changes are automatically saved in this browser, but you'll lose your current session.</p>
+            <div class="modal-buttons">
+                <button class="modal-button secondary" id="stayBtn">Stay</button>
+                <button class="modal-button primary" id="leaveBtn">Leave</button>
+            </div>
+        </div>
     </div>
     <script>
-        !function (l) {
+        !function () {
+            // In-memory storage object
+            const memoryStorage = {
+                c: '', // content
+                ff: '', // font family
+                fs: '', // font size
+                fc: '', // font color
+                dm: '' // dark mode
+            };
+            // DOM Elements
             const content = document.querySelector('.editor-content');
             const fontFamily = document.getElementById('font-family');
             const fontSize = document.getElementById('font-size');
             const fontColor = document.getElementById('font-color');
             const codeSnippetBtn = document.getElementById('code-snippet-btn');
+            const boldBtn = document.getElementById('bold-btn');
+            const italicBtn = document.getElementById('italic-btn');
+            const underlineBtn = document.getElementById('underline-btn');
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const exportBtn = document.getElementById('export-btn');
+            const charCount = document.getElementById('char-count');
+            const closeWarningModal = document.getElementById('closeWarningModal');
+            const stayBtn = document.getElementById('stayBtn');
+            const leaveBtn = document.getElementById('leaveBtn');
+
+            let pendingNavigation = null;
 
             // Load content if available
-            content.innerHTML = l.c || '';
+            content.innerHTML = memoryStorage.c || '<p>Start typing your text here...</p>';
 
-            // Save content on input
-            content.oninput = function () { l.c = content.innerHTML };
+            // Initialize settings
+            initializeSettings();
+            
+            // Update character count initially
+            updateCharCount();
 
-            // Font family change
-            fontFamily.onchange = function () {
-                content.style.fontFamily = this.value;
-            };
+            // Event listeners
+            content.oninput = handleContentChange;
+            content.onkeydown = handleKeyboardShortcuts;
+            
+            // Formatting buttons
+            boldBtn.onclick = () => toggleFormat('bold');
+            italicBtn.onclick = () => toggleFormat('italic');
+            underlineBtn.onclick = () => toggleFormat('underline');
+            
+            // Settings
+            fontFamily.onchange = updateFontFamily;
+            fontSize.onchange = updateFontSize;
+            fontColor.onchange = updateFontColor;
+            darkModeToggle.onchange = toggleDarkMode;
+            
+            // Features
+            codeSnippetBtn.onclick = insertCodeSnippet;
+            exportBtn.onclick = exportAsText;
+            
+            // Modal events
+            stayBtn.onclick = closeModal;
+            leaveBtn.onclick = confirmLeave;
+            
+            // Close warning
+            window.addEventListener('beforeunload', showCloseWarning);
+            
 
-            // Font size change
-            fontSize.onchange = function () {
-                content.style.fontSize = this.value;
-            };
+            function initializeSettings() {
+                // Load saved settings
+                if (memoryStorage.ff) fontFamily.value = memoryStorage.ff;
+                if (memoryStorage.fs) fontSize.value = memoryStorage.fs;
+                if (memoryStorage.fc) fontColor.value = memoryStorage.fc;
+                if (memoryStorage.dm === 'true') {
+                    darkModeToggle.checked = true;
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+                
+                // Apply settings
+                content.style.fontFamily = fontFamily.value;
+                content.style.fontSize = fontSize.value;
+                
+                // Set text color based on theme
+                const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+                if (isDarkMode) {
+                    content.style.color = '#ffffff';
+                } else {
+                    content.style.color = fontColor.value;
+                }
+            }
 
-            // Font color change
-            fontColor.onchange = function () {
-                content.style.color = this.value;
-            };
+            function handleContentChange() {
+                memoryStorage.c = content.innerHTML;
+                updateCharCount();
+            }
 
-            // Add code snippet
-            codeSnippetBtn.onclick = function () {
-                // Make sure the content area has focus
+            function handleKeyboardShortcuts(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch (e.key) {
+                        case 'b':
+                            e.preventDefault();
+                            toggleFormat('bold');
+                            break;
+                        case 'i':
+                            e.preventDefault();
+                            toggleFormat('italic');
+                            break;
+                        case 'u':
+                            e.preventDefault();
+                            toggleFormat('underline');
+                            break;
+                    }
+                }
+            }
+
+            function toggleFormat(command) {
+                document.execCommand(command, false, null);
+                updateFormatButtons();
                 content.focus();
+                memoryStorage.c = content.innerHTML;
+            }
 
+            function updateFormatButtons() {
+                boldBtn.classList.toggle('active', document.queryCommandState('bold'));
+                italicBtn.classList.toggle('active', document.queryCommandState('italic'));
+                underlineBtn.classList.toggle('active', document.queryCommandState('underline'));
+            }
+
+            function updateFontFamily() {
+                content.style.fontFamily = this.value;
+                memoryStorage.ff = this.value;
+            }
+
+            function updateFontSize() {
+                content.style.fontSize = this.value;
+                memoryStorage.fs = this.value;
+            }
+
+            function updateFontColor() {
+                const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+                if (isDarkMode) {
+                    content.style.color = '#ffffff';
+                } else {
+                    content.style.color = this.value;
+                }
+                memoryStorage.fc = this.value;
+            }
+
+            function toggleDarkMode() {
+                const isDark = this.checked;
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+                memoryStorage.dm = isDark.toString();
+                
+                // Force white text in dark mode
+                if (isDark) {
+                    content.style.color = '#ffffff';
+                } else {
+                    content.style.color = fontColor.value;
+                }
+            }
+
+            function insertCodeSnippet() {
+                content.focus();
                 try {
                     const selection = window.getSelection();
-
-                    // Create a code snippet element
                     const codeSnippet = document.createElement('pre');
                     codeSnippet.className = 'code-snippet';
 
@@ -180,77 +585,77 @@
                         const selectedText = range.toString();
 
                         if (selectedText.trim()) {
-                            // If text is selected, wrap it in a code snippet
                             codeSnippet.textContent = selectedText;
-
                             range.deleteContents();
                             range.insertNode(codeSnippet);
                         } else {
-                            // If no text is selected, insert an empty code snippet
                             codeSnippet.textContent = 'Enter your code here';
-
-                            // Insert at cursor position
                             range.insertNode(codeSnippet);
-
-                            // Position cursor inside the code snippet
                             range.selectNodeContents(codeSnippet);
-                            range.collapse(true); // collapse to start
+                            range.collapse(true);
                             selection.removeAllRanges();
                             selection.addRange(range);
                         }
                     } else {
-                        // Fallback if no range available
                         codeSnippet.textContent = 'Enter your code here';
                         content.appendChild(codeSnippet);
                     }
-
-                    // Update stored content
-                    l.c = content.innerHTML;
+                    memoryStorage.c = content.innerHTML;
                 } catch (error) {
-                    // Fallback insertion method
-                    const codeHTML = '<pre class="code-snippet">Enter your code here</pre>';
-                    document.execCommand('insertHTML', false, codeHTML);
+                    document.execCommand('insertHTML', false, '<pre class="code-snippet">Enter your code here</pre>');
+                    memoryStorage.c = content.innerHTML;
+                }
+            }
 
-                    // Update stored content
-                    l.c = content.innerHTML;
+            function exportAsText() {
+                const text = content.textContent || content.innerText;
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'document.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+
+            function showCloseWarning(e) {
+                e.preventDefault();
+                closeWarningModal.style.display = 'block';
+                pendingNavigation = e;
+                return false;
+            }
+
+            function closeModal() {
+                closeWarningModal.style.display = 'none';
+                pendingNavigation = null;
+            }
+
+            function confirmLeave() {
+                closeWarningModal.style.display = 'none';
+                if (pendingNavigation) {
+                    window.removeEventListener('beforeunload', showCloseWarning);
+                    window.location.reload();
+                }
+            }
+
+            function updateCharCount() {
+                const text = content.textContent || content.innerText;
+                const chars = text.length;
+                charCount.textContent = `${chars} characters`;
+            }
+
+            // Update format buttons on selection change
+            document.addEventListener('selectionchange', updateFormatButtons);
+            
+            // Click outside modal to close
+            window.onclick = function(event) {
+                if (event.target === closeWarningModal) {
+                    closeModal();
                 }
             };
-
-            // Initialize with saved settings if available
-            if (l.ff) fontFamily.value = l.ff;
-            if (l.fs) fontSize.value = l.fs;
-            if (l.fc) fontColor.value = l.fc;
-
-            // Apply saved settings
-            content.style.fontFamily = fontFamily.value;
-            content.style.fontSize = fontSize.value;
-            content.style.color = fontColor.value;
-
-            // Save settings on change
-            fontFamily.onchange = function () {
-                content.style.fontFamily = this.value;
-                l.ff = this.value;
-            };
-
-            fontSize.onchange = function () {
-                content.style.fontSize = this.value;
-                l.fs = this.value;
-            };
-
-            fontColor.onchange = function () {
-                content.style.color = this.value;
-                l.fc = this.value;
-            };
-
-            // Add confirmation before closing or refreshing
-            window.addEventListener('beforeunload', function (e) {
-                // Cancel the event
-                e.preventDefault();
-                // Chrome requires returnValue to be set
-                e.returnValue = 'Are you sure you want to leave? Your changes will be stored in this browser only.';
-                // Return value for older browsers
-                return 'Are you sure you want to leave? Your changes will be stored in this browser only.';
-            });
-        }({});
+        }();
     </script>
 </body>
